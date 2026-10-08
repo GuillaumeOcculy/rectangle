@@ -33,9 +33,6 @@ class MultiWindowManager {
         case .tileColumns:
             tileWindowsInBands(.columns)
             return true
-        case .almostMaximize:
-            almostMaximizeAllWindowsOnScreen()
-            return true
         case .cascadeAll:
             cascadeAllWindowsOnScreen(windowElement: parameters.windowElement)
             return true
@@ -352,7 +349,7 @@ class MultiWindowManager {
         w.setFrame(rect)
     }
 
-    /// Top-anchors every visible window on the current screen at the almost-maximize height, keeping each window's width and horizontal position.
+    /// Top-anchors every visible window on the current screen at the almost-maximize height (default 90%), keeping each window's width and horizontal position.
     static func almostMaximizeAllWindowsOnScreen() {
         let screenDetection = ScreenDetection()
         guard let context = tilingContext(focusedWindow: AccessibilityElement.getFocusedWindowElement(),

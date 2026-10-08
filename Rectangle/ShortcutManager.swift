@@ -434,7 +434,7 @@ struct ShortcutCycle {
 }
 
 /// Triggers window actions on a double tap of a lone modifier key:
-/// Control twice tiles columns, left Option twice applies almost maximize.
+/// Control twice tiles columns, left Option twice sets every visible window to the almost-maximize height.
 /// Right Option is ignored so it stays free for other apps.
 final class ModifierDoubleTapMonitor {
     private enum TapKey { case control, leftOption }
@@ -493,7 +493,7 @@ final class ModifierDoubleTapMonitor {
         guard !ApplicationToggle.shortcutsDisabled else { return }
         switch key {
         case .control: WindowAction.tileColumns.post()
-        case .leftOption: WindowAction.almostMaximize.post()
+        case .leftOption: MultiWindowManager.almostMaximizeAllWindowsOnScreen()
         }
     }
 }

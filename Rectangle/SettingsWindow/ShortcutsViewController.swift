@@ -271,7 +271,7 @@ class ShortcutsViewController: NSViewController {
         scrollView.documentView = outlineView
         containerView.addSubview(scrollView)
 
-        let doubleTapLabel = NSTextField(labelWithString: "Double tap:  Control ×2 → Tile Columns    Left Option ×2 → Almost Maximize")
+        let doubleTapLabel = NSTextField(labelWithString: "Double tap:  Control ×2 → Tile Columns    Left Option ×2 → All windows at 90% height")
         doubleTapLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
         doubleTapLabel.textColor = .secondaryLabelColor
         doubleTapLabel.alignment = .center
@@ -309,12 +309,37 @@ class ShortcutsViewController: NSViewController {
     
     private func setupGroups() {
         let standardCategories: [ShortcutCategory] = [
-            ShortcutCategory(actions: [.tileColumns, .almostMaximize])
+            ShortcutCategory(actions: [.leftHalf, .rightHalf, .centerHalf, .topHalf, .bottomHalf]),
+            ShortcutCategory(actions: [.topLeft, .topRight, .bottomLeft, .bottomRight]),
+            ShortcutCategory(actions: [.maximize, .almostMaximize, .maximizeHeight, .larger, .smaller, .center, .restore]),
+            ShortcutCategory(actions: [.nextDisplay, .previousDisplay])
         ]
-
+        
+        let moreCategories: [ShortcutCategory] = [
+            ShortcutCategory(actions: [.firstThird, .centerThird, .lastThird, .firstTwoThirds, .centerTwoThirds, .lastTwoThirds]),
+            ShortcutCategory(actions: [
+                .firstFourth, .secondFourth, .thirdFourth, .lastFourth, .firstThreeFourths, .centerThreeFourths, .lastThreeFourths
+            ]),
+            ShortcutCategory(actions: [
+                .topLeftSixth, .topCenterSixth, .topRightSixth, .bottomLeftSixth, .bottomCenterSixth, .bottomRightSixth
+            ]),
+            ShortcutCategory(actions: [.moveLeft, .moveRight, .moveUp, .moveDown])
+        ]
+        
+        let extraCategories: [ShortcutCategory] = [
+            ShortcutCategory(actions: [.tileRows, .tileColumns]),
+            ShortcutCategory(actions: [.largerWidth, .smallerWidth]),
+            ShortcutCategory(actions: [.topVerticalThird, .middleVerticalThird, .bottomVerticalThird, .topVerticalTwoThirds, .bottomVerticalTwoThirds]),
+            ShortcutCategory(actions: [.topLeftEighth, .topCenterLeftEighth, .topCenterRightEighth, .topRightEighth, .bottomLeftEighth, .bottomCenterLeftEighth, .bottomCenterRightEighth, .bottomRightEighth]),
+            ShortcutCategory(actions: [.topLeftNinth, .topLeftTwelfth, .topLeftSixteenth])
+        ]
+        
+        let extraGroup = CategoryGroup(title: "Extra", categories: extraCategories, isCollapsible: true)
+        
         let standardGroup = CategoryGroup(title: "", categories: standardCategories, isCollapsible: false)
-
-        rootItems = [standardGroup]
+        let moreGroup = CategoryGroup(title: "⋯", categories: moreCategories, subGroups: [extraGroup], isCollapsible: true)
+        
+        rootItems = [standardGroup, moreGroup]
     }
     
     deinit {
