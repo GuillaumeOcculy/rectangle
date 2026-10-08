@@ -26,15 +26,11 @@ class AlmostMaximizeCalculation: WindowCalculation {
     override func calculateRect(_ params: RectCalculationParameters) -> RectResult {
 
         let visibleFrameOfScreen = params.visibleFrameOfScreen
-        var calculatedWindowRect = visibleFrameOfScreen
-        
-        // Resize
+        var calculatedWindowRect = params.window.rect
+
+        // Keep current width and horizontal position; reduced height anchored to the top of the screen
         calculatedWindowRect.size.height = round(visibleFrameOfScreen.height * almostMaximizeHeight)
-        calculatedWindowRect.size.width = round(visibleFrameOfScreen.width * almostMaximizeWidth)
-        
-        // Center
-        calculatedWindowRect.origin.x = round((visibleFrameOfScreen.width - calculatedWindowRect.width) / 2.0) + visibleFrameOfScreen.minX
-        calculatedWindowRect.origin.y = round((visibleFrameOfScreen.height - calculatedWindowRect.height) / 2.0) + visibleFrameOfScreen.minY
+        calculatedWindowRect.origin.y = visibleFrameOfScreen.maxY - calculatedWindowRect.height
         
         return RectResult(calculatedWindowRect)
     }

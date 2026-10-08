@@ -150,41 +150,7 @@ enum WindowAction: Int, Codable {
          lastVerticalEighth = 140
 
     // Order matters here - it's used in the menu
-    static let active = [leftHalf, rightHalf, centerHalf, topHalf, bottomHalf,
-                         topLeft, topRight, bottomLeft, bottomRight,
-                         firstThird, centerThird, lastThird, firstTwoThirds, centerTwoThirds, lastTwoThirds,
-                         topVerticalThird, middleVerticalThird, bottomVerticalThird, topVerticalTwoThirds, bottomVerticalTwoThirds,
-                         maximize, almostMaximize, maximizeHeight, larger, smaller, largerWidth, smallerWidth, largerHeight, smallerHeight,
-                         center, centerProminently, restore,
-                         nextDisplay, previousDisplay,
-                         moveLeft, moveRight, moveUp, moveDown,
-                         firstFourth, secondFourth, thirdFourth, lastFourth, firstThreeFourths, centerThreeFourths, lastThreeFourths,
-                         topLeftSixth, topCenterSixth, topRightSixth, bottomLeftSixth, bottomCenterSixth, bottomRightSixth,
-                         specified, reverseAll,
-                         topLeftThird, topRightThird, bottomLeftThird, bottomRightThird,
-                         topLeftEighth, topCenterLeftEighth, topCenterRightEighth, topRightEighth,
-                         bottomLeftEighth, bottomCenterLeftEighth, bottomCenterRightEighth, bottomRightEighth,
-                         firstVerticalEighth, secondVerticalEighth, thirdVerticalEighth, fourthVerticalEighth,
-                         fifthVerticalEighth, sixthVerticalEighth, seventhVerticalEighth, lastVerticalEighth,
-                         topLeftNinth, topCenterNinth, topRightNinth,
-                         middleLeftNinth, middleCenterNinth, middleRightNinth,
-                         bottomLeftNinth, bottomCenterNinth, bottomRightNinth,
-                         topLeftTwelfth, topCenterLeftTwelfth, topCenterRightTwelfth, topRightTwelfth,
-                         middleLeftTwelfth, middleCenterLeftTwelfth, middleCenterRightTwelfth, middleRightTwelfth,
-                         bottomLeftTwelfth, bottomCenterLeftTwelfth, bottomCenterRightTwelfth, bottomRightTwelfth,
-                         topLeftSixteenth, topCenterLeftSixteenth, topCenterRightSixteenth, topRightSixteenth,
-                         upperMiddleLeftSixteenth, upperMiddleCenterLeftSixteenth, upperMiddleCenterRightSixteenth, upperMiddleRightSixteenth,
-                         lowerMiddleLeftSixteenth, lowerMiddleCenterLeftSixteenth, lowerMiddleCenterRightSixteenth, lowerMiddleRightSixteenth,
-                         bottomLeftSixteenth, bottomCenterLeftSixteenth, bottomCenterRightSixteenth, bottomRightSixteenth,
-                         doubleHeightUp, doubleHeightDown, doubleWidthLeft, doubleWidthRight,
-                         halveHeightUp, halveHeightDown, halveWidthLeft, halveWidthRight,
-                         tileAll, tileRows, tileColumns, cascadeAll,
-                         leftTodo, rightTodo,
-                         cascadeActiveApp, tileActiveApp,
-                         displayOne, displayTwo, displayThree, displayFour, displayFive,
-                         displaySix, displaySeven, displayEight, displayNine,
-                         cycleStackedWindows, cycleStackedWindowsBackward
-    ]
+    static let active = [tileColumns, almostMaximize]
 
     func post() {
         NotificationCenter.default.post(name: notificationName, object: ExecutionParameters(self))
@@ -675,6 +641,8 @@ enum WindowAction: Int, Codable {
 
     var spectacleDefault: Shortcut? {
         switch self {
+        case .tileColumns: return Shortcut( ctrl|alt, kVK_ANSI_T )
+        case .almostMaximize: return Shortcut( ctrl|alt, kVK_Return )
         case .leftHalf: return Shortcut( cmd|alt, kVK_LeftArrow )
         case .rightHalf: return Shortcut( cmd|alt, kVK_RightArrow )
         case .maximize: return Shortcut( cmd|alt, kVK_ANSI_F )
@@ -697,6 +665,8 @@ enum WindowAction: Int, Codable {
 
     var alternateDefault: Shortcut? {
         switch self {
+        case .tileColumns: return Shortcut( ctrl|alt, kVK_ANSI_T )
+        case .almostMaximize: return Shortcut( ctrl|alt, kVK_Return )
         case .leftHalf: return Shortcut( ctrl|alt, kVK_LeftArrow )
         case .rightHalf: return Shortcut( ctrl|alt, kVK_RightArrow )
         case .bottomHalf: return Shortcut( ctrl|alt, kVK_DownArrow )

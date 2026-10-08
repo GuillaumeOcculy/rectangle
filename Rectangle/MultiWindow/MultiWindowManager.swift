@@ -33,6 +33,9 @@ class MultiWindowManager {
         case .tileColumns:
             tileWindowsInBands(.columns)
             return true
+        case .almostMaximize:
+            almostMaximizeAllWindowsOnScreen()
+            return true
         case .cascadeAll:
             cascadeAllWindowsOnScreen(windowElement: parameters.windowElement)
             return true
@@ -347,6 +350,29 @@ class MultiWindowManager {
         rect.size = size
 
         w.setFrame(rect)
+    }
+
+    /// Top-anchors every visible window on the current screen at the almost-maximize height, keeping each window's width and horizontal position.
+    static func almostMaximizeAllWindowsOnScreen() {
+        let screenDetection = ScreenDetection()
+        guard let context = tilingContext(focusedWindow: AccessibilityElement.getFocusedWindowElement(),
+                                          screenDetection: screenDetection) else { return }
+        let visibleInfo = WindowUtil.getWindowList(forceRefresh: true)
+        let windows = windowsOnScreen(screens: context.screens,
+                                      windows: AccessibilityElement.getAllWindowElements(from: visibleInfo),
+                                      focusedWindow: context.focusedWindow,
+                                      screenFor: { screenDetection.detectScreens(using: $0)?.currentScreen }).windows
+
+        let screenFrame = context.screens.currentScreen.adjustedVisibleFrame().screenFlipped
+        let height = round(screenFrame.height * AlmostMaximizeCalculation().almostMaximizeHeight)
+
+        for w in windows where w.isResizable() {
+            var rect = w.frame
+            guard !rect.isNull else { continue }
+            rect.origin.y = screenFrame.minY
+            rect.size.height = height
+            w.setFrame(rect)
+        }
     }
 
     static func cascadeAllWindowsOnScreen(windowElement: AccessibilityElement? = nil) {
