@@ -1,5 +1,6 @@
 /// ShortcutManager.swift
 
+import Carbon
 import Cocoa
 import CoreGraphics
 import MASShortcut
@@ -429,5 +430,70 @@ struct ShortcutCycle {
     static func isStale(lastAction: RectangleAction?, currentWindowRect: CGRect?) -> Bool {
         guard let lastAction, let currentWindowRect else { return false }
         return currentWindowRect != lastAction.rect
+    }
+}
+
+/// Triggers window actions on a double tap of a lone modifier key:
+/// Control twice tiles columns, left Option twice applies almost maximize.
+/// Right Option is ignored so it stays free for other apps.
+final class ModifierDoubleTapMonitor {
+    private enum TapKey { case control, leftOption }
+
+    private static let maxTapDuration: TimeInterval = 0.3
+    private static let maxTapInterval: TimeInterval = 0.35
+
+    private var monitors = [Any]()
+    private var pressed: (key: TapKey, time: TimeInterval)?
+    private var lastTap: (key: TapKey, time: TimeInterval)?
+
+    func start() {
+        guard monitors.isEmpty else { return }
+        let modifierHandler: (NSEvent) -> Void = { [weak self] in self?.handleFlagsChanged($0) }
+        let resetHandler: (NSEvent) -> Void = { [weak self] _ in self?.reset() }
+        let resetMask: NSEvent.EventTypeMask = [.keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown, .scrollWheel]
+
+        [NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged, handler: modifierHandler),
+         NSEvent.addGlobalMonitorForEvents(matching: resetMask, handler: resetHandler),
+         NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { modifierHandler($0); return $0 },
+         NSEvent.addLocalMonitorForEvents(matching: resetMask) { resetHandler($0); return $0 }]
+            .compactMap { $0 }
+            .forEach { monitors.append($0) }
+    }
+
+    private func reset() {
+        pressed = nil
+        lastTap = nil
+    }
+
+    private func handleFlagsChanged(_ event: NSEvent) {
+        let flags = event.modifierFlags.intersection([.control, .option, .shift, .command, .function])
+
+        if flags == .control, event.keyCode == UInt16(kVK_Control) || event.keyCode == UInt16(kVK_RightControl) {
+            pressed = (.control, event.timestamp)
+        } else if flags == .option, event.keyCode == UInt16(kVK_Option) {
+            pressed = (.leftOption, event.timestamp)
+        } else if flags.isEmpty, let pressed {
+            self.pressed = nil
+            guard event.timestamp - pressed.time <= Self.maxTapDuration else {
+                lastTap = nil
+                return
+            }
+            if let lastTap, lastTap.key == pressed.key, event.timestamp - lastTap.time <= Self.maxTapInterval {
+                self.lastTap = nil
+                trigger(pressed.key)
+            } else {
+                lastTap = (pressed.key, event.timestamp)
+            }
+        } else {
+            reset()
+        }
+    }
+
+    private func trigger(_ key: TapKey) {
+        guard !ApplicationToggle.shortcutsDisabled else { return }
+        switch key {
+        case .control: WindowAction.tileColumns.post()
+        case .leftOption: WindowAction.almostMaximize.post()
+        }
     }
 }

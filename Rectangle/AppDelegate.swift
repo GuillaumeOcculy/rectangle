@@ -20,6 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private var shortcutManager: ShortcutManager!
+    private let modifierDoubleTapMonitor = ModifierDoubleTapMonitor()
     private var windowManager: WindowManager!
     private var applicationToggle: ApplicationToggle!
     private var windowCalculationFactory: WindowCalculationFactory!
@@ -146,6 +147,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.windowCalculationFactory = WindowCalculationFactory()
         self.windowManager = WindowManager()
         self.shortcutManager = ShortcutManager(windowManager: windowManager)
+        modifierDoubleTapMonitor.start()
         self.applicationToggle = ApplicationToggle(shortcutManager: shortcutManager)
         self.snappingManager = SnappingManager()
         self.stackBadgeManager = StackBadgeManager()
