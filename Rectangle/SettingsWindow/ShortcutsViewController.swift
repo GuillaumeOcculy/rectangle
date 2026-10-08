@@ -270,12 +270,22 @@ class ShortcutsViewController: NSViewController {
         
         scrollView.documentView = outlineView
         containerView.addSubview(scrollView)
-        
+
+        let doubleTapLabel = NSTextField(labelWithString: "Double tap:  Control ×2 → Tile Columns    Left Option ×2 → Almost Maximize")
+        doubleTapLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        doubleTapLabel.textColor = .secondaryLabelColor
+        doubleTapLabel.alignment = .center
+        doubleTapLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(doubleTapLabel)
+
         NSLayoutConstraint.activate([
             scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            scrollView.bottomAnchor.constraint(equalTo: doubleTapLabel.topAnchor, constant: -12),
+            doubleTapLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            doubleTapLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            doubleTapLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16)
         ])
         
         self.view = containerView
