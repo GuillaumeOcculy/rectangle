@@ -14,6 +14,19 @@ final class ShortcutItem: NSObject {
 
 final class SpacerItem: NSObject {}
 
+/// A modifier double tap gesture (see ModifierDoubleTapMonitor), shown read-only in the list.
+final class DoubleTapItem: NSObject {
+    let title: String
+    let keys: String
+    let image: NSImage?
+
+    init(title: String, keys: String, image: NSImage?) {
+        self.title = title
+        self.keys = keys
+        self.image = image
+    }
+}
+
 final class ShortcutCategory: NSObject {
     let items: [ShortcutItem]
     
@@ -27,11 +40,14 @@ final class CategoryGroup: NSObject {
     let items: [Any]
     let isCollapsible: Bool
     
-    init(title: String, categories: [ShortcutCategory], subGroups: [CategoryGroup] = [], isCollapsible: Bool = true) {
+    init(title: String, categories: [ShortcutCategory], leadingItems: [Any] = [], subGroups: [CategoryGroup] = [], isCollapsible: Bool = true) {
         self.title = title
         self.isCollapsible = isCollapsible
         
-        var flatItems: [Any] = []
+        var flatItems: [Any] = leadingItems
+        if !leadingItems.isEmpty {
+            flatItems.append(SpacerItem())
+        }
         for (index, category) in categories.enumerated() {
             flatItems.append(contentsOf: category.items)
             
@@ -210,6 +226,83 @@ final class ShortcutActionCellView: NSTableCellView {
     }
 }
 
+final class DoubleTapCellView: NSTableCellView {
+    static let identifier = NSUserInterfaceItemIdentifier("DoubleTapCell")
+
+    let iconImageView = NSImageView()
+    let titleLabel = NSTextField(labelWithString: "")
+    let keysLabel = NSTextField(labelWithString: "")
+    let keysBox = NSView()
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        titleLabel.textColor = .labelColor
+        titleLabel.alignment = .right
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.imageScaling = .scaleProportionallyDown
+
+        keysBox.translatesAutoresizingMaskIntoConstraints = false
+        keysBox.wantsLayer = true
+        keysBox.layer?.cornerRadius = 5
+        keysBox.layer?.borderWidth = 1
+        keysBox.layer?.borderColor = NSColor.separatorColor.cgColor
+
+        keysLabel.translatesAutoresizingMaskIntoConstraints = false
+        keysLabel.alignment = .center
+        keysLabel.textColor = .labelColor
+        keysLabel.toolTip = "Double tap (fixed, not editable)"
+        keysBox.addSubview(keysLabel)
+
+        addSubview(titleLabel)
+        addSubview(iconImageView)
+        addSubview(keysBox)
+
+        NSLayoutConstraint.activate([
+            keysBox.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -68),
+            keysBox.centerYAnchor.constraint(equalTo: centerYAnchor),
+            keysBox.widthAnchor.constraint(equalToConstant: 160),
+            keysBox.heightAnchor.constraint(equalToConstant: 19),
+
+            keysLabel.centerXAnchor.constraint(equalTo: keysBox.centerXAnchor),
+            keysLabel.centerYAnchor.constraint(equalTo: keysBox.centerYAnchor),
+
+            iconImageView.trailingAnchor.constraint(equalTo: keysBox.leadingAnchor, constant: -16),
+            iconImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 21),
+            iconImageView.heightAnchor.constraint(equalToConstant: 14),
+
+            titleLabel.trailingAnchor.constraint(equalTo: iconImageView.leadingAnchor, constant: -8),
+            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20)
+        ])
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        keysBox.layer?.borderColor = NSColor.separatorColor.cgColor
+    }
+
+    func configure(with item: DoubleTapItem) {
+        iconImageView.image = item.image
+        titleLabel.stringValue = item.title
+        keysLabel.stringValue = item.keys
+    }
+}
+
 // MARK: - Custom Outline View (Frame-adjusted disclosure chevrons)
 
 final class InsetOutlineView: NSOutlineView {
@@ -270,22 +363,12 @@ class ShortcutsViewController: NSViewController {
         
         scrollView.documentView = outlineView
         containerView.addSubview(scrollView)
-
-        let doubleTapLabel = NSTextField(labelWithString: "Double tap:  Control ×2 → Tile Columns    Left Option ×2 → All windows at 90% height")
-        doubleTapLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
-        doubleTapLabel.textColor = .secondaryLabelColor
-        doubleTapLabel.alignment = .center
-        doubleTapLabel.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(doubleTapLabel)
-
+        
         NSLayoutConstraint.activate([
             scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: doubleTapLabel.topAnchor, constant: -12),
-            doubleTapLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            doubleTapLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            doubleTapLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16)
+            scrollView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
         
         self.view = containerView
@@ -336,7 +419,11 @@ class ShortcutsViewController: NSViewController {
         
         let extraGroup = CategoryGroup(title: "Extra", categories: extraCategories, isCollapsible: true)
         
-        let standardGroup = CategoryGroup(title: "", categories: standardCategories, isCollapsible: false)
+        let doubleTapItems = [
+            DoubleTapItem(title: "Tile Columns (equal widths)", keys: "⌃  ⌃", image: WindowAction.tileColumns.image),
+            DoubleTapItem(title: "All Windows at 90% Height", keys: "Left ⌥  ⌥", image: WindowAction.almostMaximize.image)
+        ]
+        let standardGroup = CategoryGroup(title: "", categories: standardCategories, leadingItems: doubleTapItems, isCollapsible: false)
         let moreGroup = CategoryGroup(title: "⋯", categories: moreCategories, subGroups: [extraGroup], isCollapsible: true)
         
         rootItems = [standardGroup, moreGroup]
@@ -409,6 +496,13 @@ extension ShortcutsViewController: NSOutlineViewDelegate {
             let cell = outlineView.makeView(withIdentifier: ShortcutActionCellView.identifier, owner: self) as? ShortcutActionCellView ?? ShortcutActionCellView()
             cell.identifier = ShortcutActionCellView.identifier
             cell.configure(with: shortcutItem.action, recordingObserver: shortcutRecordingObserver)
+            return cell
+        }
+        
+        if let doubleTapItem = item as? DoubleTapItem {
+            let cell = outlineView.makeView(withIdentifier: DoubleTapCellView.identifier, owner: self) as? DoubleTapCellView ?? DoubleTapCellView()
+            cell.identifier = DoubleTapCellView.identifier
+            cell.configure(with: doubleTapItem)
             return cell
         }
         
